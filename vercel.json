@@ -1,10 +1,9 @@
 {
   "version": 2,
   "builds": [
-    { "src": "api/*.go", "use": "@vercel/go" }
+    { "src": "api/counter.go", "use": "@vercel/go" }
   ],
   "routes": [
-    { "src": "/hit", "dest": "api/hit.go" },
-    { "src": "/count", "dest": "api/count.go" }
+    { "src": "^/(hit|count)$", "dest": "api/counter.go" }
   ]
 }
