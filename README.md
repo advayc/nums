@@ -1,4 +1,4 @@
-# Hit Counter Service
+# nums
 
 This project is a hit counter service built with a Go backend and a Next.js API proxy. It allows you to track and display page views for your website.
 
@@ -31,7 +31,5 @@ curl -i "http://localhost:3000/api/hit?id=test"
 ## Notes
 - Ensure the `SECRET_TOKEN` matches between the backend and frontend.
 - Logs are available in the Next.js API route for debugging upstream interactions.
-
-# Hit Counter Go API
-
-Simple Go HTTP API to count website visits. Maintains an in-memory atomic counter.
+  
+<img width="1920" height="1093" alt="banner" src="https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446" />
