@@ -15,6 +15,7 @@ import (
 	"syscall"
 	"time"
 
+	redis "github.com/redis/go-redis/v9"
 	"github.com/rs/cors"
 )
 
@@ -66,6 +67,63 @@ func (mc *MultiCounter) Get(id string) uint64 {
 	return atomic.LoadUint64(ptr)
 }
 
+// RedisCounter provides persistent counts using Redis (if configured)
+type RedisCounter struct {
+	client *redis.Client
+	prefix string
+}
+
+func NewRedisCounter(redisURL, prefix string) (*RedisCounter, error) {
+	opt, err := redis.ParseURL(redisURL)
+	if err != nil {
+		return nil, fmt.Errorf("parse redis url: %w", err)
+	}
+	c := redis.NewClient(opt)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	if err := c.Ping(ctx).Err(); err != nil {
+		return nil, fmt.Errorf("redis ping: %w", err)
+	}
+	if prefix == "" {
+		prefix = "hits:"
+	}
+	return &RedisCounter{client: c, prefix: prefix}, nil
+}
+
+func (r *RedisCounter) key(id string) string {
+	if id == "" {
+		id = "default"
+	}
+	return r.prefix + id
+}
+
+func (r *RedisCounter) Inc(id string) (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	v, err := r.client.Incr(ctx, r.key(id)).Result()
+	if err != nil {
+		return 0, err
+	}
+	return uint64(v), nil
+}
+
+func (r *RedisCounter) Get(id string) (uint64, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Second)
+	defer cancel()
+	s, err := r.client.Get(ctx, r.key(id)).Result()
+	if err == redis.Nil {
+		return 0, nil
+	}
+	if err != nil {
+		return 0, err
+	}
+	v, convErr := strconv.ParseUint(s, 10, 64)
+	if convErr != nil {
+		return 0, convErr
+	}
+	return v, nil
+}
+
 // JSON response helpers
 func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 	w.Header().Set("Content-Type", "application/json")
@@ -76,11 +134,23 @@ func writeJSON(w http.ResponseWriter, status int, v interface{}) {
 func main() {
 	port := getenv("PORT", "8080")
 	secretToken := os.Getenv("SECRET_TOKEN") // if set, required via header X-Auth-Token or query param token
-	persistFile := os.Getenv("PERSIST_FILE") // if set, counter value persisted to this file
+	persistFile := os.Getenv("PERSIST_FILE") // if set, counter value persisted to this file (single default counter only when not using Redis)
 	allowedOriginsEnv := os.Getenv("ALLOWED_ORIGINS")
+	redisURL := os.Getenv("REDIS_URL") // optional; if set enables persistent counts in Redis for all ids
+	redisPrefix := os.Getenv("REDIS_PREFIX")
 
 	singleCounter := &HitCounter{}
 	multi := NewMultiCounter()
+	var redisCounter *RedisCounter
+	if redisURL != "" {
+		rc, err := NewRedisCounter(redisURL, redisPrefix)
+		if err != nil {
+			log.Printf("(warn) redis disabled (init failed): %v", err)
+		} else {
+			redisCounter = rc
+			log.Printf("redis persistence enabled (prefix=%s)", rc.prefix)
+		}
+	}
 
 	// Load persisted value if configured
 	if persistFile != "" {
@@ -107,15 +177,25 @@ func main() {
 		}
 		id := r.URL.Query().Get("id")
 		var newVal uint64
-		if id == "" { // legacy single counter path
-			newVal = singleCounter.Inc()
-			if persistFile != "" {
-				if err := saveCountToFile(persistFile, newVal); err != nil {
-					log.Printf("(warn) persist failed: %v", err)
-				}
+		if redisCounter != nil { // persistent path
+			v, err := redisCounter.Inc(id)
+			if err != nil {
+				log.Printf("(error) redis incr failed, falling back to memory: %v", err)
+			} else {
+				newVal = v
 			}
-		} else {
-			newVal = multi.Inc(id)
+		}
+		if newVal == 0 { // fallback / memory path
+			if id == "" { // legacy single counter path
+				newVal = singleCounter.Inc()
+				if persistFile != "" && redisCounter == nil { // only persist to file when not using redis
+					if err := saveCountToFile(persistFile, newVal); err != nil {
+						log.Printf("(warn) persist failed: %v", err)
+					}
+				}
+			} else {
+				newVal = multi.Inc(id)
+			}
 		}
 		writeJSON(w, http.StatusOK, map[string]any{"id": id, "hits": newVal})
 	})
@@ -133,10 +213,19 @@ func main() {
 		}
 		id := r.URL.Query().Get("id")
 		var val uint64
-		if id == "" {
-			val = singleCounter.Get()
-		} else {
-			val = multi.Get(id)
+		var err error
+		if redisCounter != nil {
+			val, err = redisCounter.Get(id)
+			if err != nil {
+				log.Printf("(error) redis get failed, falling back to memory: %v", err)
+			}
+		}
+		if redisCounter == nil || err != nil {
+			if id == "" {
+				val = singleCounter.Get()
+			} else {
+				val = multi.Get(id)
+			}
 		}
 		// Support plain text output via format=txt
 		if f := r.URL.Query().Get("format"); f == "txt" || f == "text" {
@@ -161,10 +250,19 @@ func main() {
 		}
 		id := r.URL.Query().Get("id")
 		var val uint64
-		if id == "" {
-			val = singleCounter.Get()
-		} else {
-			val = multi.Get(id)
+		var err error
+		if redisCounter != nil {
+			val, err = redisCounter.Get(id)
+			if err != nil {
+				log.Printf("(error) redis get failed, falling back to memory: %v", err)
+			}
+		}
+		if redisCounter == nil || err != nil {
+			if id == "" {
+				val = singleCounter.Get()
+			} else {
+				val = multi.Get(id)
+			}
 		}
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-cache")
@@ -187,9 +285,17 @@ func main() {
 		if id == "" {
 			id = "default"
 		}
-		count := multi.Get(id)
-		if id == "default" {
-			count = singleCounter.Get()
+		var count uint64
+		if redisCounter != nil {
+			if v, err := redisCounter.Get(id); err == nil {
+				count = v
+			}
+		}
+		if count == 0 { // fallback to memory
+			count = multi.Get(id)
+			if id == "default" {
+				count = singleCounter.Get()
+			}
 		}
 		label := r.URL.Query().Get("label")
 		if label == "" {
