@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"os/signal"
 	"strconv"
@@ -139,16 +140,31 @@ func main() {
 	redisURL := os.Getenv("REDIS_URL") // optional; if set enables persistent counts in Redis for all ids
 	redisPrefix := os.Getenv("REDIS_PREFIX")
 
+	// Upstash convenience: if REDIS_URL not provided, try constructing from UPSTASH env vars.
+	if redisURL == "" {
+		upstashBase := os.Getenv("UPSTASH_REDIS_URL")      // e.g. global-fancy-123.upstash.io:12345 or rediss://... or redis://...
+		upstashPass := os.Getenv("UPSTASH_REDIS_PASSWORD") // password only
+		if upstashBase != "" && upstashPass != "" {
+			redisURL = buildUpstashRedisURL(upstashBase, upstashPass)
+			log.Printf("constructed redis URL from UPSTASH_REDIS_URL/PASSWORD (host=%s)", upstashBase)
+		}
+	}
+
+	failFastRedis := os.Getenv("FAIL_FAST_REDIS") == "1"
+
 	singleCounter := &HitCounter{}
 	multi := NewMultiCounter()
 	var redisCounter *RedisCounter
 	if redisURL != "" {
 		rc, err := NewRedisCounter(redisURL, redisPrefix)
 		if err != nil {
+			if failFastRedis {
+				log.Fatalf("redis init failed (FAIL_FAST_REDIS=1): %v", err)
+			}
 			log.Printf("(warn) redis disabled (init failed): %v", err)
 		} else {
 			redisCounter = rc
-			log.Printf("redis persistence enabled (prefix=%s)", rc.prefix)
+			log.Printf("redis persistence enabled (prefix=%s, addr=%s)", rc.prefix, rc.client.Options().Addr)
 		}
 	}
 
@@ -397,6 +413,34 @@ type loggingResponseWriter struct {
 func (l *loggingResponseWriter) WriteHeader(code int) {
 	l.status = code
 	l.ResponseWriter.WriteHeader(code)
+}
+
+// buildUpstashRedisURL normalizes various Upstash env var formats into a redis:// URL expected by go-redis
+// Accepts inputs like:
+//
+//	UPSTASH_REDIS_URL = global-fancy-123.upstash.io:12345
+//	UPSTASH_REDIS_URL = rediss://global-fancy-123.upstash.io:12345
+//	UPSTASH_REDIS_URL = redis://global-fancy-123.upstash.io:12345
+//
+// The password is supplied separately (UPSTASH_REDIS_PASSWORD).
+func buildUpstashRedisURL(rawHost, password string) string {
+	if rawHost == "" || password == "" {
+		return ""
+	}
+	// Ensure scheme present
+	if !strings.HasPrefix(rawHost, "redis://") && !strings.HasPrefix(rawHost, "rediss://") {
+		// Upstash recommends TLS; prefer rediss://
+		rawHost = "rediss://" + rawHost
+	}
+	// Parse to safely inject user/pass if not already
+	u, err := url.Parse(rawHost)
+	if err != nil {
+		return ""
+	}
+	if u.User == nil { // add default user (Upstash uses default user "default" implicitly, but not required); keep username empty
+		u.User = url.UserPassword("default", password)
+	}
+	return u.String()
 }
 
 // getenv returns env var or fallback
