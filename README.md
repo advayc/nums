@@ -93,7 +93,10 @@ Public read endpoints (`/count`, `/count.txt`, `/badge`, `/badge.json`) do NOT r
 example usage: 
 ```markdown
 ![hits](https://nums-ten.vercel.app/badge?id=home&style=terminal&label=hits&bg=%23101414)```
+```
+
 #### Plain text number
+
 ```
 https://nums-ten.vercel.app/count.txt?id=home
 ```
