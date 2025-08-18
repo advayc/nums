@@ -4,62 +4,97 @@ This project is a hit counter service built with a Go backend and a Next.js API 
 
 <img width="1920" height="1093" alt="banner" src="https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446" />
 
+## What it gives you
+- `/hit?id=foo` (GET/POST): increments and returns JSON `{ id, hits }`
+- `/count?id=foo`: returns current JSON count
+- `/count.txt?id=foo`: plain number (good for badges)
+- `/badge?id=foo&label=views`: SVG badge (no increment)
+- Auth (optional) via `SECRET_TOKEN` header `X-Auth-Token` (or `?token=`)
+- Persistent storage in Upstash Redis (falls back to in‑memory if unavailable)
 
-## Features
-- Increment and fetch hit counts for specific IDs.
-- Proxy API route in Next.js to securely interact with the backend.
-- Supports plain-text counts and SVG badges.
+---
+## Quick Setup (Fork -> Upstash -> Run)
 
-## Usage
-
-### API Endpoints
-- **Increment Hits**: `POST /api/hit?id=<id>`
-- **Fetch Hits**: `GET /api/hit?id=<id>`
-
-### Example
-Increment the hit count for `test`:
+### 1. Fork & Clone
 ```bash
-curl -i -X POST "http://localhost:3000/api/hit?id=test"
+git clone https://github.com/advayc/nums.git
+cd nums
 ```
 
-Fetch the hit count for `test`:
+### 2. Create Upstash Redis
+1. Go to https://console.upstash.com/redis and create a database.
+2. Copy the Endpoint (host:port) and Password.
+
+### 3. Create `.env` (no `.env.example` used)
+Paste & fill (leave `REDIS_URL` blank to auto-build from `UPSTASH_` values):
+```
+PORT=8080
+SECRET_TOKEN=REPLACE_WITH_RANDOM_SECRET
+PERSIST_FILE=/tmp/counter.txt
+ALLOWED_ORIGINS=YOURWEBSITE
+REDIS_URL=
+UPSTASH_REDIS_URL=
+UPSTASH_REDIS_PASSWORD=
+REDIS_PREFIX=hits:
+FAIL_FAST_REDIS=0
+HIT_COUNTER_SECRET_TOKEN=REPLACE_WITH_RANDOM_SECRET
+NEXT_PUBLIC_HIT_COUNTER_URL=YOURVERCELDEPLOYMENTURL
+```
+Minimum for persistence: `SECRET_TOKEN` plus either `REDIS_URL` or both `UPSTASH_REDIS_URL` & `UPSTASH_REDIS_PASSWORD`.
+
+### 4. Run Locally
 ```bash
-curl -i "http://localhost:3000/api/hit?id=test"
+go run ./cmd/server
+curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/hit?id=home"
+curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/count?id=home"
+```
+Expect `{ "id": "home", "hits": 1 }`.
+
+### 5. Deploy to Vercel
+1. Import the repo into Vercel.
+2. Add all env vars (omit `PORT` / `PERSIST_FILE` if you want—they're ignored serverless).
+3. Deploy → base URL: `https://<deployment>`.
+
+### 6. Use in Next.js (simple client component)
+```tsx
+"use client";
+import { useEffect, useState } from 'react';
+export function HitCounter({ id }: { id: string }) {
+  const [hits, setHits] = useState<number>();
+  useEffect(() => {
+    fetch(`${process.env.NEXT_PUBLIC_HIT_COUNTER_URL}/hit?id=${encodeURIComponent(id)}`, {
+      headers: { 'X-Auth-Token': process.env.HIT_COUNTER_SECRET_TOKEN! }
+    }).then(r => r.json()).then(d => setHits(d.hits));
+  }, [id]);
+  return <span>{hits ?? '…'}</span>;
+}
 ```
 
-## Deployment
-- Deploy the Go server to a platform like Vercel.
-- Deploy the Next.js app to Vercel or any other hosting provider.
-
-### Persistent Storage (Redis / Upstash)
-To avoid counters resetting you must use a Redis service with persistence. The free Redis Cloud plan (no persistence) will wipe data periodically. Upstash free tier persists by default.
-
-#### Upstash Setup
-1. Create a free Redis database at https://console.upstash.com/ (choose a region near your users).
-2. Copy the generated credentials. You will see either:
-	- A full URL: `rediss://default:<PASSWORD>@<HOST>:<PORT>` (use this as `REDIS_URL`), or
-	- Separate host + password (set `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD`). The server will auto-build `REDIS_URL` if `REDIS_URL` itself is empty.
-3. In your `.env` (or Vercel project settings) set:
-	- `SECRET_TOKEN=<shared secret>`
-	- `REDIS_URL=rediss://default:<PASSWORD>@<HOST>:<PORT>` (or the two Upstash vars)
-	- `ALLOWED_ORIGINS=https://your-site.vercel.app`
-	- `FAIL_FAST_REDIS=1` (recommended so deploy fails if Redis is unreachable)
-	- Frontend (Next.js) also needs `HIT_COUNTER_SECRET_TOKEN` (same value) and `NEXT_PUBLIC_HIT_COUNTER_URL` pointing at the deployed hit service.
-4. Redeploy. Logs should show: `redis persistence enabled ...`.
-5. Test:
-```bash
-curl -H "X-Auth-Token: $SECRET_TOKEN" "https://<hit-service-domain>/hit?id=home"
-curl -H "X-Auth-Token: $SECRET_TOKEN" "https://<hit-service-domain>/count?id=home&format=txt"
+### 7. Badges / Plain Count
+```
+![views](https://<deployment>/badge?id=home&label=views)
+https://<deployment>/count.txt?id=home
 ```
 
-#### Security Notes
-Never commit real secrets. Use the provided `.env.example` as a template. Rotate credentials immediately if exposed.
+---
+## Env Var Reference
+| Var | Purpose |
+|-----|---------|
+| PORT | Local listen port (Go server) |
+| SECRET_TOKEN | Auth shared secret (header `X-Auth-Token` or `?token=`) |
+| PERSIST_FILE | File persistence (single legacy counter when Redis absent) |
+| ALLOWED_ORIGINS | Comma list for CORS (e.g. https://site1,https://site2) |
+| REDIS_URL | Full redis URL (overrides auto-build) |
+| UPSTASH_REDIS_URL | Upstash host:port or redis(s):// URL |
+| UPSTASH_REDIS_PASSWORD | Upstash password |
+| REDIS_PREFIX | Key prefix (default hits:) |
+| FAIL_FAST_REDIS | `1` to crash if Redis init fails |
+| HIT_COUNTER_SECRET_TOKEN | Duplicate token for frontend build usage |
+| NEXT_PUBLIC_HIT_COUNTER_URL | Public base URL of deployed counter service |
 
-#### Fail-Fast Behavior
-If you set `FAIL_FAST_REDIS=1`, startup aborts instead of silently falling back to in-memory counters when Redis init fails, preventing accidental resets.
-
-## Notes
-- Ensure the `SECRET_TOKEN` matches between the backend and frontend.
-- Logs are available in the Next.js API route for debugging upstream interactions.
- - Use Upstash (or a persistent Redis plan) to guarantee counters survive restarts.
-  
+---
+## Troubleshooting
+- 401 Unauthorized: missing or wrong token.
+- Not persisting: ensure Redis vars; check logs for `redis persistence enabled`.
+- Need startup failure if Redis down: set `FAIL_FAST_REDIS=1`.
+- Badge shows 0: call `/hit?id=...` first.
