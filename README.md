@@ -71,9 +71,22 @@ export function HitCounter({ id }: { id: string }) {
 ```
 
 ### 7. Badges / Plain Count
+Public read endpoints (`/count`, `/count.txt`, `/badge`, `/badge.json`) do NOT require the auth token; only `/hit` does.
+
+Markdown options:
 ```
+<!-- Direct SVG (some platforms block external SVGs) -->
 ![views](https://<deployment>/badge?id=home&label=views)
-https://<deployment>/count.txt?id=home
+
+<!-- Shields.io proxy (works reliably on GitHub) -->
+![views](https://img.shields.io/endpoint?url=https://<deployment>/badge.json?id=home&label=views)
+
+Plain text number: https://<deployment>/count.txt?id=home
+```
+
+`/badge.json` returns the Shields.io endpoint schema:
+```json
+{"schemaVersion":1,"label":"views","message":"123","color":"blue"}
 ```
 
 ---

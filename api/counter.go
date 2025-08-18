@@ -98,13 +98,14 @@ func authorize(r *http.Request) bool {
 }
 
 func Handler(w http.ResponseWriter, r *http.Request) {
-	if !authorize(r) {
-		w.WriteHeader(http.StatusUnauthorized)
-		_ = json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
-		return
-	}
 	switch r.URL.Path {
 	case "/hit":
+		// Only the mutating endpoint (/hit) is protected by auth so badges/counts can be public.
+		if !authorize(r) {
+			w.WriteHeader(http.StatusUnauthorized)
+			_ = json.NewEncoder(w).Encode(map[string]string{"error": "unauthorized"})
+			return
+		}
 		if r.Method != http.MethodGet && r.Method != http.MethodPost {
 			w.Header().Set("Allow", "GET, POST")
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -238,6 +239,47 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
 		w.Header().Set("Cache-Control", "no-cache")
 		_, _ = w.Write([]byte(svg))
+
+	case "/badge.json":
+		// JSON schema for Shields.io endpoint badge proxy
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", "GET")
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			id = "home"
+		}
+		var val uint64
+		if rc := getRedis(); rc != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 1500*time.Millisecond)
+			defer cancel()
+			if s, err := rc.Get(ctx, "hits:"+id).Result(); err == nil {
+				if parsed, perr := strconv.ParseUint(s, 10, 64); perr == nil {
+					val = parsed
+				}
+			}
+		}
+		if val == 0 {
+			val = globalCount.Load()
+		}
+		label := r.URL.Query().Get("label")
+		if label == "" {
+			label = "views"
+		}
+		color := r.URL.Query().Get("color")
+		if color == "" {
+			color = "blue"
+		}
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		_ = json.NewEncoder(w).Encode(map[string]any{
+			"schemaVersion": 1,
+			"label":         label,
+			"message":       strconv.FormatUint(val, 10),
+			"color":         color,
+		})
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "not found"})
@@ -257,7 +299,7 @@ func buildBadgeSVG(label string, count uint64, color string) string {
 <rect rx="3" width="%d" height="20" fill="#555"/>
 <rect rx="3" x="%d" width="%d" height="20" fill="%s"/>
 <rect rx="3" width="%d" height="20" fill="url(#s)"/>
-<g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
+<g fill="#fff" text-anchor="middle" font-family="SF-Mono" font-size="11">
 <text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
 <text x="%d" y="15">%s</text>
 <text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
