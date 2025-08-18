@@ -242,7 +242,11 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			}
 			svg := buildTerminalBadge(label, val, font, bg, labelColor, valueColor)
 			w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
-			w.Header().Set("Cache-Control", "no-cache")
+			// Strong anti-cache headers so GitHub's image proxy (camo) revalidates frequently
+			w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+			w.Header().Set("Pragma", "no-cache")
+			w.Header().Set("Expires", "0")
+			w.Header().Set("ETag", fmt.Sprintf("\"badge-%s-%d-terminal\"", id, val))
 			_, _ = w.Write([]byte(svg))
 			return
 		}
@@ -256,7 +260,10 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		}
 		svg := buildBadgeSVG(label, val, color, font)
 		w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
-		w.Header().Set("Cache-Control", "no-cache")
+		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+		w.Header().Set("ETag", fmt.Sprintf("\"badge-%s-%d\"", id, val))
 		_, _ = w.Write([]byte(svg))
 		return
 
@@ -292,6 +299,19 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if color == "" {
 			color = "blue"
 		}
+		// Allow requester to set cacheSeconds (Shields min enforcement still applies)
+		cacheSeconds := 60
+		if csStr := r.URL.Query().Get("cacheSeconds"); csStr != "" {
+			if parsed, err := strconv.Atoi(csStr); err == nil {
+				if parsed < 30 { // floor to 30 to avoid Shields rejection
+					parsed = 30
+				}
+				if parsed > 3600 {
+					parsed = 3600
+				}
+				cacheSeconds = parsed
+			}
+		}
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")
 		w.Header().Set("Cache-Control", "no-cache")
 		_ = json.NewEncoder(w).Encode(map[string]any{
@@ -299,6 +319,7 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			"label":         label,
 			"message":       strconv.FormatUint(val, 10),
 			"color":         color,
+			"cacheSeconds":  cacheSeconds,
 		})
 	default:
 		w.WriteHeader(http.StatusNotFound)
