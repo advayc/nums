@@ -87,10 +87,10 @@ Plain text number: https://<deployment>/count.txt?id=home
 This is an example of the badge in action:
 
 ![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fnums-ten.vercel.app%2Fbadge.json%3Fid%3Dhome%26cacheSeconds%3D30)
-^^ updates faster, aprox 30s
+-> updates faster, aprox 30s
 
 ![views](https://nums-ten.vercel.app/badge?id=home&style=terminal)
-^^ updates slower, aprox 60s
+-> updates slower, aprox 60s
 
 `/badge.json` returns the Shields.io endpoint schema:
 ```json
