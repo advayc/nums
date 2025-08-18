@@ -73,28 +73,42 @@ export function HitCounter({ id }: { id: string }) {
 ### 7. Badges / Plain Count
 Public read endpoints (`/count`, `/count.txt`, `/badge`, `/badge.json`) do NOT require the auth token; only `/hit` does.
 
-Markdown options:
+#### Recommended for GitHub (using shields.io)
+```markdown
+![hits](https://img.shields.io/endpoint?url=https%3A%2F%2Fnums-ten.vercel.app%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
 ```
-<!-- Direct SVG (some platforms block external SVGs) -->
-![views](https://<deployment>/badge?id=home&label=views)
+- **Label**: Change `label=hits` to any text you want (e.g., `views`).
+- **Update interval**: About every 30 seconds (minimum allowed by Shields.io).
+- **Works everywhere**: Always renders on GitHub and most platforms.
 
-<!-- Shields.io proxy (works reliably on GitHub) -->
-![views](https://img.shields.io/endpoint?url=https://<deployment>/badge.json?id=home&label=views)
-
-Plain text number: https://<deployment>/count.txt?id=home
+#### Direct terminal-style badge (custom SVG, updates instantly, through vercel deployment)
+```markdown
+![hits](https://nums-ten.vercel.app/badge?id=home&style=terminal&label=hits)
 ```
 
-This is an example of the badge in action:
+- **Label**: Set `label=hits` or any text.
+- **Update interval**: Instantly from your server, but GitHub may cache for 1–2 minutes.
+- **Customizable**: Change colors and font with `bg`, `labelColor`, `valueColor`, `font` params. (for bg, you need the unicode character for # (%23) at the start of the hex code )
 
-![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fnums-ten.vercel.app%2Fbadge.json%3Fid%3Dhome%26cacheSeconds%3D30)
--> updates faster, aprox 30s
+example usage: 
+```markdown
+![hits](https://nums-ten.vercel.app/badge?id=home&style=terminal&label=hits&bg=%23101414)```
+#### Plain text number
+```
+https://nums-ten.vercel.app/count.txt?id=home
+```
 
-![views](https://nums-ten.vercel.app/badge?id=home&style=terminal)
--> updates slower, aprox 60s
+#### Example badge
+
+Shields.io (recommended):
+![hits](https://img.shields.io/endpoint?url=https%3A%2F%2Fnums-ten.vercel.app%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
+
+Direct terminal style:
+![hits](https://nums-ten.vercel.app/badge?id=home&style=terminal&label=hits)
 
 `/badge.json` returns the Shields.io endpoint schema:
 ```json
-{"schemaVersion":1,"label":"views","message":"123","color":"blue"}
+{"schemaVersion":1,"label":"hits","message":"123","color":"blue","cacheSeconds":30}
 ```
 
 ---
