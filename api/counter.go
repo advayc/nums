@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"net/url"
@@ -163,6 +164,12 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if val == 0 { // fallback memory value (not id-specific; legacy behavior)
 			val = globalCount.Load()
 		}
+		// optional plain text via format=txt
+		if f := r.URL.Query().Get("format"); f == "txt" || f == "text" {
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			_, _ = w.Write([]byte(strconv.FormatUint(val, 10)))
+			return
+		}
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]any{"id": id, "hits": val, "source": func() string {
 			if getRedis() != nil {
@@ -170,8 +177,99 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 			}
 			return "memory"
 		}()})
+	case "/count.txt":
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", "GET")
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			id = "home"
+		}
+		var val uint64
+		if rc := getRedis(); rc != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 1500*time.Millisecond)
+			defer cancel()
+			if s, err := rc.Get(ctx, "hits:"+id).Result(); err == nil {
+				if parsed, perr := strconv.ParseUint(s, 10, 64); perr == nil {
+					val = parsed
+				}
+			}
+		}
+		if val == 0 {
+			val = globalCount.Load()
+		}
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		_, _ = w.Write([]byte(strconv.FormatUint(val, 10)))
+	case "/badge":
+		if r.Method != http.MethodGet {
+			w.Header().Set("Allow", "GET")
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		id := r.URL.Query().Get("id")
+		if id == "" {
+			id = "home"
+		}
+		var val uint64
+		if rc := getRedis(); rc != nil {
+			ctx, cancel := context.WithTimeout(r.Context(), 1500*time.Millisecond)
+			defer cancel()
+			if s, err := rc.Get(ctx, "hits:"+id).Result(); err == nil {
+				if parsed, perr := strconv.ParseUint(s, 10, 64); perr == nil {
+					val = parsed
+				}
+			}
+		}
+		if val == 0 {
+			val = globalCount.Load()
+		}
+		label := r.URL.Query().Get("label")
+		if label == "" {
+			label = "views"
+		}
+		color := r.URL.Query().Get("color")
+		if color == "" {
+			color = "blue"
+		}
+		svg := buildBadgeSVG(label, val, color)
+		w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
+		w.Header().Set("Cache-Control", "no-cache")
+		_, _ = w.Write([]byte(svg))
 	default:
 		w.WriteHeader(http.StatusNotFound)
 		_ = json.NewEncoder(w).Encode(map[string]string{"error": "not found"})
 	}
+}
+
+// buildBadgeSVG creates a very small static SVG badge (simplified version)
+func buildBadgeSVG(label string, count uint64, color string) string {
+	textVal := strconv.FormatUint(count, 10)
+	// basic width calculation
+	labelWidth := 6*len(label) + 10
+	valWidth := 6*len(textVal) + 10
+	total := labelWidth + valWidth
+	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="20" role="img" aria-label="%s: %s">
+<linearGradient id="s" x2="0" y2="100%%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
+<rect rx="3" width="%d" height="20" fill="#555"/>
+<rect rx="3" x="%d" width="%d" height="20" fill="%s"/>
+<rect rx="3" width="%d" height="20" fill="url(#s)"/>
+<g fill="#fff" text-anchor="middle" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="11">
+<text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
+<text x="%d" y="15">%s</text>
+<text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
+<text x="%d" y="15">%s</text>
+</g>
+</svg>`,
+		total, label, textVal,
+		total, labelWidth, valWidth, color,
+		total,
+		labelWidth/2, label,
+		labelWidth/2, label,
+		labelWidth+valWidth/2, textVal,
+		labelWidth+valWidth/2, textVal,
+	)
 }
