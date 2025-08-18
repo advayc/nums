@@ -4,6 +4,6 @@
     { "src": "api/counter.go", "use": "@vercel/go" }
   ],
   "routes": [
-    { "src": "^/(hit|count|count.txt|badge)$", "dest": "api/counter.go" }
+    { "src": "^/(hit|count|count.txt|badge|badge.json)$", "dest": "api/counter.go" }
   ]
 }
