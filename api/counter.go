@@ -231,14 +231,34 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 		if label == "" {
 			label = "views"
 		}
+		style := r.URL.Query().Get("style")
+		if style == "terminal" || style == "mono" { // custom terminal style
+			bg := normalizeColor(r.URL.Query().Get("bg"), "#1e1e1e")
+			labelColor := normalizeColor(r.URL.Query().Get("labelColor"), "#aaa")
+			valueColor := normalizeColor(r.URL.Query().Get("valueColor"), "#3cffb3")
+			font := r.URL.Query().Get("font")
+			if font == "" {
+				font = "SFMono-Regular, SF Mono, Menlo, ui-monospace, monospace"
+			}
+			svg := buildTerminalBadge(label, val, font, bg, labelColor, valueColor)
+			w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
+			w.Header().Set("Cache-Control", "no-cache")
+			_, _ = w.Write([]byte(svg))
+			return
+		}
 		color := r.URL.Query().Get("color")
 		if color == "" {
 			color = "blue"
 		}
-		svg := buildBadgeSVG(label, val, color)
+		font := r.URL.Query().Get("font")
+		if font == "" {
+			font = "Verdana,Geneva,DejaVu Sans,sans-serif"
+		}
+		svg := buildBadgeSVG(label, val, color, font)
 		w.Header().Set("Content-Type", "image/svg+xml;charset=utf-8")
 		w.Header().Set("Cache-Control", "no-cache")
 		_, _ = w.Write([]byte(svg))
+		return
 
 	case "/badge.json":
 		// JSON schema for Shields.io endpoint badge proxy
@@ -286,10 +306,29 @@ func Handler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// buildBadgeSVG creates a very small static SVG badge (simplified version)
-func buildBadgeSVG(label string, count uint64, color string) string {
+// normalizeColor restricts colors to safe values (basic allowlist)
+func normalizeColor(c string, fallback string) string {
+	if c == "" {
+		return fallback
+	}
+	c = strings.TrimSpace(c)
+	lc := strings.ToLower(c)
+	if strings.HasPrefix(lc, "#") {
+		if len(lc) == 4 || len(lc) == 7 { // #rgb or #rrggbb
+			return lc
+		}
+		return fallback
+	}
+	switch lc {
+	case "blue", "green", "red", "orange", "yellow", "gray", "grey", "purple", "teal":
+		return lc
+	}
+	return fallback
+}
+
+// buildBadgeSVG creates a small classic style badge, allowing a custom font
+func buildBadgeSVG(label string, count uint64, color string, font string) string {
 	textVal := strconv.FormatUint(count, 10)
-	// basic width calculation
 	labelWidth := 6*len(label) + 10
 	valWidth := 6*len(textVal) + 10
 	total := labelWidth + valWidth
@@ -299,7 +338,7 @@ func buildBadgeSVG(label string, count uint64, color string) string {
 <rect rx="3" width="%d" height="20" fill="#555"/>
 <rect rx="3" x="%d" width="%d" height="20" fill="%s"/>
 <rect rx="3" width="%d" height="20" fill="url(#s)"/>
-<g fill="#fff" text-anchor="middle" font-family="SF-Mono" font-size="11">
+<g fill="#fff" text-anchor="middle" font-family="%s" font-size="11">
 <text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
 <text x="%d" y="15">%s</text>
 <text x="%d" y="15" fill="#010101" fill-opacity=".3">%s</text>
@@ -308,10 +347,31 @@ func buildBadgeSVG(label string, count uint64, color string) string {
 </svg>`,
 		total, label, textVal,
 		total, labelWidth, valWidth, color,
-		total,
+		total, font,
 		labelWidth/2, label,
 		labelWidth/2, label,
 		labelWidth+valWidth/2, textVal,
 		labelWidth+valWidth/2, textVal,
+	)
+}
+
+// buildTerminalBadge outputs a terminal-like monospace badge with label:value styling
+func buildTerminalBadge(label string, count uint64, font, bg, labelColor, valueColor string) string {
+	textVal := strconv.FormatUint(count, 10)
+	labelText := label + ":"
+	// approximate monospace width ~8px per char + padding
+	labelWidth := 8*len(labelText) + 14
+	valWidth := 8*len(textVal) + 14
+	total := labelWidth + valWidth
+	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="%d" height="24" role="img" aria-label="%s: %s">
+<rect rx="4" width="%d" height="24" fill="%s" />
+<text x="%d" y="16" font-family="%s" font-size="12" fill="%s">%s</text>
+<text x="%d" y="16" font-family="%s" font-size="12" font-weight="600" fill="%s">%s</text>
+</svg>`,
+		total, label, textVal,
+		total, bg,
+		8, font, labelColor, labelText,
+		labelWidth, font, valueColor, textVal,
 	)
 }

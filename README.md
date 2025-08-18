@@ -84,6 +84,13 @@ Markdown options:
 Plain text number: https://<deployment>/count.txt?id=home
 ```
 
+This is an example of the badge in action:
+
+![views](https://img.shields.io/endpoint?url=https%3A%2F%2Fnums-ten.vercel.app%2Fbadge.json%3Fid%3Dhome&color=blue&label=views&cacheSeconds=60)
+
+![views](https://nums-ten.vercel.app/badge?id=home&style=terminal)
+
+
 `/badge.json` returns the Shields.io endpoint schema:
 ```json
 {"schemaVersion":1,"label":"views","message":"123","color":"blue"}
