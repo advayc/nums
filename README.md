@@ -38,7 +38,7 @@ FAIL_FAST_REDIS=0
 HIT_COUNTER_SECRET_TOKEN=YOUR_RANDOM_SECRET
 NEXT_PUBLIC_HIT_COUNTER_URL=https://your-deployment-url
 ```
-
+(the private token can be anything)
 **Minimum for persistence:** `SECRET_TOKEN` plus either `REDIS_URL` or both `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD`.
 
 ### 4. Run Locally
