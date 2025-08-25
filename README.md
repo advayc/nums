@@ -75,9 +75,10 @@ curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/count?id=home"
 - `GET /badge.json?id=foo&label=views`  
   Returns a Shields.io-compatible JSON schema for badges.
 
-You can send a POST, into the endpoint with your depolyment from:
+With the deployment and secret token setup, the endpoints would be:
 
-https://<YOUR_DEPLOYMENT_URL>/hit?id=home&token=YOUR_SECRET_TOKEN
+`https://<YOUR_DEPLOYMENT_URL>/hit?id=home&token=YOUR_SECRET_TOKEN` -> increment count
+`https://<YOUR_DEPLOYMENT_URL>/count?id=home&token=YOUR_SECRET_TOKEN` -> view count (this is public and does not require the token)
 
 **Note:** Only `/hit` requires authentication. `/count`, `/count.txt`, `/badge`, and `/badge.json` are public.
 
