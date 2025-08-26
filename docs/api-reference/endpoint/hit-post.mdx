@@ -5,7 +5,14 @@ openapi: 'POST /hit'
 
 Same behavior as GET /hit using POST.
 
-Example
+Before you test
+- Use your own deployment URL (e.g., `https://<project>.vercel.app`) and your secret token from the server env (`SECRET_TOKEN`).
+- The public instance at `https://nums.advay.ca` does not expose your secret, so you cannot increment there unless you self-host.
+
+Example (self-hosted)
 ```bash
-curl -X POST -H "X-Auth-Token: $SECRET_TOKEN" "https://<deployment>/hit?id=home"
+curl -X POST -H "X-Auth-Token: $SECRET_TOKEN" "https://<project>.vercel.app/hit?id=home"
 ```
+
+Tip
+- Viewing counts does not require any token. See `/count` and `/count.txt`.

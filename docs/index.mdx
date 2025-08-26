@@ -1,20 +1,35 @@
 ---
 title: "nums"
-description: "Open-source hit counter and badges"
+description: "A simple scalable Go-based counting API"
 ---
 
 <img
-	src="https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446"
-	alt="nums banner"
-	style={{ width: '100%', borderRadius: 8 }}
+  src="https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446"
+  alt="nums banner"
+  style={{ width: '100%', borderRadius: 8 }}
 />
 
 nums is an open-source hit counter and badge service. Increment and display page views using a tiny Go server with Redis (**Upstash** recommended) and deploy on **Vercel**.
 
-Next steps
-- **Overview** → /overview
-- **Quickstart** (Redis + Upstash + GitHub + Vercel) → /quickstart
-- **API Reference** → /api-reference/introduction
+## Why nums?
 
-Repository
-- <a href="https://github.com/advayc/nums" target="_blank" rel="noreferrer noopener">GitHub repo ↗</a>
+Most analytics tools are heavy and track more than you need. nums focuses on being:
+- **Simple** – one API call increments or fetches a count
+- **Fast** – backed by Redis for low-latency reads and writes
+- **Lightweight** – no scripts or tracking pixels
+- **Privacy-friendly** – no personal data collection, deployed on your infrastructure
+- **Flexible** – counts can be displayed as JSON, text, or dynamic badges
+
+## Features
+- Track hits for any page or resource
+- Auto-create counters on first use
+- Return counts as plain text or JSON
+- Generate SVG badges you can embed in READMEs, docs, or sites
+- Easy deployment with Vercel + Upstash Redis
+- Open-source and self-hostable
+
+## Example use cases
+- Page view counters for websites
+- Download counters for projects or assets
+- Visit counters for documentation pages
+- Badges for GitHub READMEs

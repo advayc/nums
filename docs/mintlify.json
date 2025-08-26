@@ -2,7 +2,7 @@
   "name": "nums",
   "logo": "https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446",
   "navigation": [
-    { "group": "Guides", "pages": ["index", "overview", "quickstart", "endpoints", "badges"] },
+    { "group": "Documentation", "pages": ["index", "overview", "quickstart", "endpoints", "badges"] },
     { "group": "API Reference", "pages": ["api-reference/introduction"] }
   ],
   "api": {

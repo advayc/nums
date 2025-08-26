@@ -34,6 +34,7 @@ FAIL_FAST_REDIS=0
 
 Notes
 - Only **/hit** requires the secret (via `X-Auth-Token` header or `?token=`). Read endpoints are public.
+- The token is used to authorize requests to the **/hit** endpoint. You can make it whatever string you want, just remember to use the same one in your requests.
 - If both `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD` are set, the server builds a `REDIS_URL` automatically.
 
 4) Run locally

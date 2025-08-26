@@ -1,14 +1,92 @@
 ## Shields.io (recommended for GitHub)
+
+Shields.io badges are a reliable and consistent way to display dynamic data, such as hit counters, on platforms like GitHub. Below is an example of how to use a Shields.io badge:
+
 ```markdown
 ![hits](https://img.shields.io/endpoint?url=https%3A%2F%2Fnums.advay.ca%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
 ```
-- Updates about every ~30s due to Shields caching
-- Works reliably across **GitHub** and other platforms
 
-## Direct SVG (live)
+### Key Features
+- **Caching**: Updates approximately every 30 seconds due to Shields.io's caching mechanism.
+- **Reliability**: Works seamlessly across GitHub, npm, and other platforms.
+- **Consistency**: Ideal for projects requiring stable and predictable badge behavior.
+
+### How to Use
+1. Copy the Markdown snippet above.
+2. Replace `id=home` with your unique counter ID.
+3. Paste it into your README.md or any Markdown-supported file.
+
+---
+
+## Direct SVG (live from nums)
+
+Direct SVG badges fetch live data directly from your nums server. This method offers more customization options and faster updates. Here's an example:
+
 ```markdown
-![hits](https://nums.advay.ca/badge?id=home&style=terminal&label=hits)
+![hits](https://nums.advay.ca/badge?id=home&style=terminal&label=hits&bg=08c4fc&labelColor=000000&valueColor=ffffff&font=monospace)
 ```
-- Updates instantly from your server
-- GitHub may still cache for 1–2 minutes
-- Customize with `bg`, `labelColor`, `valueColor`, `font`
+
+### Key Features
+- **Instant Updates**: Reflects real-time data from your server.
+- **Customizable**: Modify the badge's appearance to match your project's theme.
+- **GitHub Caching**: Note that GitHub may cache the image for 1–2 minutes.
+
+### Customization Parameters
+Below is a table of parameters you can use to customize your badge:
+
+| Param        | Example            | Description                                      |
+| ------------ | ------------------ | ------------------------------------------------ |
+| `id`         | `home`             | Unique key for your counter (page/project id)    |
+| `label`      | `hits`             | Text shown on the left side of the badge         |
+| `style`      | `flat`, `terminal` | Badge design style                               |
+| `bg`         | `08c4fc`           | Background color (hex without `#`)               |
+| `labelColor` | `000000`           | Label text background color                      |
+| `valueColor` | `ffffff`           | Counter value text color                         |
+| `font`       | `monospace`        | Font family (e.g., `sans`, `serif`, `monospace`) |
+| `cache`      | `30`               | Cache time in seconds (optional override)        |
+
+### How to Use
+1. Copy the Markdown snippet above.
+2. Replace `id=home` with your unique counter ID.
+3. Adjust the parameters to customize the badge's appearance.
+4. Paste it into your README.md or any Markdown-supported file.
+
+---
+
+## Plaintext Badge
+
+Plaintext badges are a simple and lightweight option for displaying hit counters in plain text format. These badges are ideal for environments where images are not supported or when you prefer a minimalistic approach.
+
+### Example
+
+```link
+https://<YOUR_DEPLOYMENT_URL>/count.txt
+```
+
+### Key Features
+- **Lightweight**: No images, just plain text.
+- **Universal Compatibility**: Works in any environment that supports text.
+- **Real-Time Updates**: Fetches the latest counter value directly from the server.
+
+### How to Use
+1. Copy the plaintext URL above.
+2. Replace `id=home` with your unique counter ID.
+3. Paste the URL into your desired location (e.g., README.md, plain text file, etc.).
+4. When accessed, the URL will display the current counter value as plain text.
+
+### Use Cases
+- **CLI Tools**: Display hit counters in terminal-based applications.
+- **Text-Only Platforms**: Ideal for environments that do not support images.
+- **Minimalistic Projects**: Perfect for projects that prioritize simplicity and speed.
+
+---
+
+### Quick Comparison
+
+| Feature          | Shields.io Badge       | Direct SVG Badge       |
+|------------------|------------------------|------------------------|
+| **Update Speed** | ~30 seconds            | Instant (1–2 min cache)|
+| **Reliability**  | High                   | Depends on server      |
+| **Customization**| Limited                | Extensive              |
+
+Use **Shields.io** for reliability and **Direct SVG** for real-time updates and customization.
