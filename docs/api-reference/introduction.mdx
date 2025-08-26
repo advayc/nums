@@ -1,0 +1,26 @@
+---
+title: 'API Overview'
+description: 'nums API reference and setup'
+---
+
+Welcome to the nums API. This service lets you increment, read, and display view counters.
+
+Base URL
+Default public instance: `https://nums.advay.ca/`.
+Or use your own Vercel deployment, e.g. `https://<project>.vercel.app`.
+
+Authentication
+- Only the /hit endpoint requires a secret. Send it as the `X-Auth-Token` header or `?token=` query.
+- All read endpoints are public.
+
+Environment variables
+- SECRET_TOKEN: required for /hit
+- UPSTASH_REDIS_URL and UPSTASH_REDIS_PASSWORD: for Redis persistence (or provide REDIS_URL)
+
+Quick example
+```
+curl -H "X-Auth-Token: $SECRET_TOKEN" "https://nums.advay.ca/hit?id=home"   # requires your secret if you self-host
+curl "https://nums.advay.ca/count?id=home"
+```
+
+Note: For POST requests to `/hit`, try it with your own deployment and secret token.

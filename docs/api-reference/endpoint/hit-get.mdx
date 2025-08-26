@@ -1,0 +1,14 @@
+---
+title: 'Increment hits (GET)'
+openapi: 'GET /hit'
+---
+
+Increment the counter for an id and return the updated value.
+
+Authentication
+- Send your secret via `X-Auth-Token` header or `?token=` query.
+
+Example
+```bash
+curl -H "X-Auth-Token: $SECRET_TOKEN" "https://<deployment>/hit?id=home"
+```

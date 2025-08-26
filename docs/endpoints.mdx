@@ -1,0 +1,56 @@
+Base URL: `https://nums.advay.ca/`
+
+Note: Only **/hit** requires authentication via `X-Auth-Token` header (or `?token=`). All other read endpoints are public.
+
+## Increment
+- Method: GET or POST
+- Path: `/hit`
+- Query: `id` (string)
+- Auth: required
+- Response:
+```json
+{ "id": "home", "hits": 73, "source": "redis|memory" }
+```
+- Example:
+```bash
+curl -H "X-Auth-Token: $SECRET_TOKEN" "https://nums.advay.ca/hit?id=home"
+```
+For POST, you must test with your own deployment and secret token.
+
+## Read (JSON)
+- Method: GET
+- Path: `/count`
+- Query: `id` (string)
+- Response:
+```json
+{ "id": "home", "hits": 73, "source": "redis|memory" }
+```
+
+- Example:
+```bash
+curl "https://nums.advay.ca/count?id=home"
+```
+
+## Read (Text)
+- Method: GET
+- Path: `/count.txt`
+- Query: `id` (string)
+- Response: plain number
+```
+73
+```
+
+## Badge (SVG)
+- Method: GET
+- Path: `/badge`
+- Query: `id`, `label=views`, `style=terminal|default`, `bg`, `labelColor`, `valueColor`, `font`
+- Response: `image/svg+xml`
+
+## Badge (Shields Endpoint)
+- Method: GET
+- Path: `/badge.json`
+- Query: `id`, `label`, `color`, `cacheSeconds`
+- Response:
+```json
+{ "schemaVersion": 1, "label": "views", "message": "73", "color": "blue", "cacheSeconds": 30 }
+```

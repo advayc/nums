@@ -1,0 +1,20 @@
+{
+  "name": "nums",
+  "logo": "https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446",
+  "navigation": [
+    { "group": "Guides", "pages": ["index", "overview", "quickstart", "endpoints", "badges"] },
+    { "group": "API Reference", "pages": ["api-reference/introduction"] }
+  ],
+  "api": {
+    "openapi": "./openapi.yaml",
+    "baseUrl": "https://<your-vercel-deployment>.vercel.app"
+  },
+  "theme": {
+    "colors": {
+      "primary": "#08c4fc",
+      "secondary": "#005f73",
+      "background": "#f0f4f8",
+      "text": "#333333"
+    }
+  }
+}

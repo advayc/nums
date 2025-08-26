@@ -1,0 +1,141 @@
+openapi: 3.0.3
+info:
+  title: nums API
+  version: "1.0.0"
+  description: Simple hit counter and badge service.
+servers:
+  - url: https://nums.advay.ca
+paths:
+  /hit:
+    get:
+      summary: Increment and return hits for an id
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+          required: false
+          description: Counter id (default home)
+        - in: header
+          name: X-Auth-Token
+          schema: { type: string }
+          required: false
+          description: Secret token (required unless provided as token query)
+        - in: query
+          name: token
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  hits: { type: integer }
+                  source: { type: string }
+        '401': { description: Unauthorized }
+    post:
+      summary: Increment and return hits for an id (POST)
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        '200': { description: OK }
+        '401': { description: Unauthorized }
+  /count:
+    get:
+      summary: Get current count (JSON)
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  hits: { type: integer }
+                  source: { type: string }
+  /count.txt:
+    get:
+      summary: Get current count (plain text)
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "73"
+  /badge:
+    get:
+      summary: Render SVG badge
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: label
+          schema: { type: string }
+          example: hits
+        - in: query
+          name: style
+          schema: { type: string }
+          example: terminal
+        - in: query
+          name: bg
+          schema: { type: string }
+          example: "#101414"
+        - in: query
+          name: labelColor
+          schema: { type: string }
+        - in: query
+          name: valueColor
+          schema: { type: string }
+        - in: query
+          name: font
+          schema: { type: string }
+      responses:
+        '200': { description: SVG image }
+  /badge.json:
+    get:
+      summary: Shields endpoint JSON
+      parameters:
+        - in: query
+          name: id
+          schema: { type: string }
+        - in: query
+          name: label
+          schema: { type: string }
+          example: hits
+        - in: query
+          name: color
+          schema: { type: string }
+          example: blue
+        - in: query
+          name: cacheSeconds
+          schema: { type: integer }
+          example: 30
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schemaVersion: { type: integer, example: 1 }
+                  label: { type: string, example: hits }
+                  message: { type: string, example: "73" }
+                  color: { type: string, example: blue }
+                  cacheSeconds: { type: integer, example: 30 }

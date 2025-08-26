@@ -1,0 +1,11 @@
+---
+title: 'Increment hits (POST)'
+openapi: 'POST /hit'
+---
+
+Same behavior as GET /hit using POST.
+
+Example
+```bash
+curl -X POST -H "X-Auth-Token: $SECRET_TOKEN" "https://<deployment>/hit?id=home"
+```

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "num documentation",
+  "colors": {
+    "primary": "#08c4fc",
+    "light": "#8de8ff",
+    "dark": "#018db8"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": {
+    "tabs": [
+      {
+    "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": [
+              "index",
+              "overview",
+              "quickstart",
+      "badges",
+      "endpoints"
+            ]
+          }
+        ]
+      },
+      {
+    "tab": "API reference",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": [
+              "api-reference/introduction"
+            ]
+          },
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api-reference/endpoint/hit-get",
+              "api-reference/endpoint/hit-post",
+              "api-reference/endpoint/count-get",
+              "api-reference/endpoint/count-text-get",
+              "api-reference/endpoint/badge-get",
+              "api-reference/endpoint/badge-json-get"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  }
+}

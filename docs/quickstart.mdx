@@ -1,0 +1,69 @@
+
+This guide walks you through setting up nums with **Upstash Redis**, running locally, and deploying on **Vercel** via **GitHub**.
+
+1) Fork & clone
+```bash
+git clone https://github.com/advayc/nums.git
+cd nums
+```
+
+2) Create Redis (Upstash)
+- Go to Upstash Redis: https://console.upstash.com/redis
+- Create a database. Copy:
+	- the Connection URL (host:port or rediss://…)
+	- the password
+
+3) Configure environment variables
+Create a `.env` file in the repo root:
+```env
+# Required for /hit authorization
+SECRET_TOKEN=YOUR_RANDOM_SECRET
+
+# Redis via Upstash (recommended)
+UPSTASH_REDIS_URL=your-upstash-host:port
+UPSTASH_REDIS_PASSWORD=your-password
+
+# Or provide a full URL instead of the pair above
+# REDIS_URL=rediss://default:password@host:port
+
+# Optional tweaks
+PORT=8080
+REDIS_PREFIX=hits:
+FAIL_FAST_REDIS=0
+```
+
+Notes
+- Only **/hit** requires the secret (via `X-Auth-Token` header or `?token=`). Read endpoints are public.
+- If both `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD` are set, the server builds a `REDIS_URL` automatically.
+
+4) Run locally
+```bash
+go run ./cmd/server
+```
+Test it:
+```bash
+curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/hit?id=home"
+curl "http://localhost:8080/count?id=home"
+curl "http://localhost:8080/count.txt?id=home"
+```
+
+5) Deploy to Vercel (via GitHub)
+1. Push your fork to **GitHub**.
+2. In **Vercel**, import the GitHub repo: https://vercel.com/new
+3. Set the same environment variables in Project → Settings → Environment Variables.
+4. Deploy. Your base URL will be like `https://<project>.vercel.app` (or your custom domain).
+
+6) Add a badge to your README
+- Shields endpoint JSON:
+```markdown
+![hits](https://img.shields.io/endpoint?url=https%3A%2F%2F<project>.vercel.app%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
+```
+- Direct SVG (terminal style):
+```markdown
+![hits](https://<project>.vercel.app/badge?id=home&style=terminal&label=hits)
+```
+
+Troubleshooting
+- 401 on /hit: check SECRET_TOKEN in the header or `?token=`.
+- Count stuck at 0: call `/hit?id=...` at least once, verify Redis env vars.
+- Vercel envs: ensure they’re set for the correct environment (Preview/Production).

@@ -1,0 +1,15 @@
+
+nums is an open-source hit counter and badge service for your website. It provides fast, serverless tracking using **Go** and **Redis**.
+
+What you can do
+- Increment counts with `/hit?id=...` (auth required)
+- Read counts as JSON (`/count`) or text (`/count.txt`)
+- Display badges that update automatically (`/badge`, `/badge.json`)
+
+Default base URL (demo): `https://nums.advay.ca/`
+
+Learn more
+- **Quickstart** → /quickstart
+- **API Reference** → /api-reference/introduction
+
+Security note: Only `/hit` requires a secret. All read endpoints are public by design.
