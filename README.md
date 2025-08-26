@@ -142,3 +142,10 @@ export function HitCounter({ id }: { id: string }) {
 - `401 Unauthorized`: Check your token.
 - Not persisting: Ensure Redis vars are correctly set.
 - Badge always 0: Call `/hit?id=...` at least once.
+
+---
+
+## Documentation
+
+- Hosted docs: https://nums.advay.ca
+- Guide + API reference (Mintlify) in `docs/` (open locally with `mint dev`).
