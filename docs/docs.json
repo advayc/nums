@@ -8,6 +8,15 @@
     "dark": "#018db8"
   },
   "favicon": "/favicon.svg",
+  "logo": {
+    "light": "logo/light.svg",
+    "dark": "logo/dark.svg"
+  },
+  "openGraph": {
+    "title": "nums documentation",
+    "description": "Track and display website visits with nums.",
+    "image": "/meta.png"
+  },
   "navigation": {
     "tabs": [
       {
@@ -48,10 +57,6 @@
         ]
       }
     ]
-  },
-  "logo": {
-    "light": "logo/light.svg",
-    "dark": "logo/dark.svg"
   },
   "footer": {
     "socials": {
