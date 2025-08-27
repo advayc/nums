@@ -5,7 +5,12 @@ openapi: 'GET /badge.json'
 
 Return Shields.io-compatible JSON for a dynamic badge.
 
-Example
+## Example
+
+The following example demonstrates how to use the Shields endpoint to create a badge for your project's homepage hits:
+
 ```bash
 open "https://img.shields.io/endpoint?url=https%3A%2F%2F<deployment>%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30"
 ```
+
+Replace `<deployment>` with your actual deployment URL. This command, when run in a terminal, will open a URL that returns a JSON response compatible with Shields.io, allowing you to display dynamic badge data.

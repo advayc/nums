@@ -1,70 +1,104 @@
+This guide helps you set up nums with Upstash Redis, run it locally, deploy to Vercel, and verify everything works end‑to‑end.
 
-This guide walks you through setting up nums with **Upstash Redis**, running locally, and deploying on **Vercel** via **GitHub**.
+<Steps>
+<Step title="Fork and clone">
+  ```bash
+  git clone https://github.com/advayc/nums.git
+  cd nums
+  ```
 
-1) Fork & clone
-```bash
-git clone https://github.com/advayc/nums.git
-cd nums
-```
+  <Info>
+  You can also import the repo directly into Vercel and skip local cloning.
+  </Info>
+</Step>
 
-2) Create Redis (Upstash)
-- Go to Upstash Redis: https://console.upstash.com/redis
-- Create a database. Copy:
-	- the Connection URL (host:port or rediss://…)
-	- the password
+<Step title="Create Redis (Upstash recommended)">
+  - Visit https://console.upstash.com/redis
+  - Create a database and copy both:
+    - the connection host (host:port or rediss://…)
+    - the password
 
-3) Configure environment variables
-Create a `.env` file in the repo root:
-```env
-# Required for /hit authorization
-SECRET_TOKEN=YOUR_RANDOM_SECRET
+  <Tip>
+  If you provide both <code>UPSTASH_REDIS_URL</code> and <code>UPSTASH_REDIS_PASSWORD</code>, nums will build a proper <code>REDIS_URL</code> automatically.
+  </Tip>
+</Step>
 
-# Redis via Upstash (recommended)
-UPSTASH_REDIS_URL=your-upstash-host:port
-UPSTASH_REDIS_PASSWORD=your-password
+<Step title="Configure environment variables">
+  Create a <code>.env</code> file in the repo root:
 
-# Or provide a full URL instead of the pair above
-# REDIS_URL=rediss://default:password@host:port
+  ```env
+  # Required for /hit authorization (send via X-Auth-Token or ?token=)
+  SECRET_TOKEN=YOUR_RANDOM_SECRET
 
-# Optional tweaks
-PORT=8080
-REDIS_PREFIX=hits:
-FAIL_FAST_REDIS=0
-```
+  # Redis via Upstash (recommended)
+  UPSTASH_REDIS_URL=your-upstash-host:port
+  UPSTASH_REDIS_PASSWORD=your-password
 
-Notes
-- Only **/hit** requires the secret (via `X-Auth-Token` header or `?token=`). Read endpoints are public.
-- The token is used to authorize requests to the **/hit** endpoint. You can make it whatever string you want, just remember to use the same one in your requests.
-- If both `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD` are set, the server builds a `REDIS_URL` automatically.
+  # Alternatively provide a full redis URL
+  # REDIS_URL=rediss://default:password@host:port
 
-4) Run locally
-```bash
-go run ./cmd/server
-```
-Test it:
-```bash
-curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/hit?id=home"
-curl "http://localhost:8080/count?id=home"
-curl "http://localhost:8080/count.txt?id=home"
-```
+  # Optional (local server only)
+  PORT=8080
+  REDIS_PREFIX=hits:
+  FAIL_FAST_REDIS=0
+  ```
 
-5) Deploy to Vercel (via GitHub)
-1. Push your fork to **GitHub**.
-2. In **Vercel**, import the GitHub repo: https://vercel.com/new
-3. Set the same environment variables in Project → Settings → Environment Variables.
-4. Deploy. Your base URL will be like `https://<project>.vercel.app` (or your custom domain).
+  <Note>
+  Only <b>/hit</b> requires a secret. Read endpoints (<code>/count</code>, <code>/count.txt</code>, <code>/badge</code>, <code>/badge.json</code>) are public.
+  </Note>
+</Step>
 
-6) Add a badge to your README
-- Shields endpoint JSON:
-```markdown
-![hits](https://img.shields.io/endpoint?url=https%3A%2F%2F<project>.vercel.app%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
-```
-- Direct SVG (terminal style):
-```markdown
-![hits](https://<project>.vercel.app/badge?id=home&style=terminal&label=hits)
-```
+<Step title="Run locally">
+  ```bash
+  go run ./cmd/server
+  ```
 
-Troubleshooting
-- 401 on /hit: check SECRET_TOKEN in the header or `?token=`.
-- Count stuck at 0: call `/hit?id=...` at least once, verify Redis env vars.
-- Vercel envs: ensure they’re set for the correct environment (Preview/Production).
+  Verify endpoints:
+  ```bash
+  # increment (requires your secret)
+  curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/hit?id=home"
+
+  # read JSON and text
+  curl "http://localhost:8080/count?id=home"
+  curl "http://localhost:8080/count.txt?id=home"
+  ```
+
+  <Check>
+  You should see a JSON response like <code>&#123;&quot;id&quot;:&quot;home&quot;,&quot;hits&quot;:1&#125;</code> from /hit and a number from /count.txt.
+  </Check>
+</Step>
+
+<Step title="Deploy to Vercel">
+  1. Push your fork to GitHub.
+  2. Import the repo in Vercel: https://vercel.com/new
+  3. Add the same env vars in Project → Settings → Environment Variables.
+  4. Deploy. Your URL will look like <code>https://&lt;project&gt;.vercel.app</code> (or your custom domain).
+
+  <Warning>
+  Never expose your secret token in client-side code. For client websites, route increment requests through a server function.
+  </Warning>
+</Step>
+
+<Step title="Add a badge to your README">
+  - Shields (recommended):
+  ```markdown
+  ![hits](https://img.shields.io/endpoint?url=https%3A%2F%2F<project>.vercel.app%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
+  ```
+  - Direct SVG (terminal style):
+  ```markdown
+  ![hits](https://<project>.vercel.app/badge?id=home&style=terminal&label=hits)
+  ```
+
+  <Tip>
+  <code>cacheSeconds</code> in <code>/badge.json</code> is clamped to 30–3600 seconds.
+  </Tip>
+</Step>
+</Steps>
+
+<AccordionGroup>
+<Accordion title="Troubleshooting">
+  - 401 on /hit: check <code>SECRET_TOKEN</code> in the header or <code>?token=</code>.
+  - Count stuck at 0: call <code>/hit?id=…</code> at least once; verify Redis env vars.
+  - Vercel envs: ensure variables are set for the right environment (Preview/Production).
+</Accordion>
+</AccordionGroup>

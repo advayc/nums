@@ -3,11 +3,11 @@ title: 'Badge (SVG)'
 openapi: 'GET /badge'
 ---
 
-Render an SVG badge with the current count.
+Render an SVG badge with the current count (does not increment).
 
-Query params: `id`, `label`, `style`, `bg`, `labelColor`, `valueColor`, `font`.
+Query params: `id`, `label`, `style` (omit or `terminal`/`mono`), `color` (classic), `bg`, `labelColor`, `valueColor`, `font` (terminal style).
 
 Example
 ```bash
-open "https://<deployment>/badge?id=home&style=terminal&label=hits"
+open "https://<deployment>/badge?id=home&style=terminal&label=hits&bg=%23101414&valueColor=%233cffb3"
 ```

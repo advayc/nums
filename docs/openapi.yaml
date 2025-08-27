@@ -9,16 +9,12 @@ paths:
   /hit:
     get:
       summary: Increment and return hits for an id
+      description: One of X-Auth-Token header or token query is required.
       parameters:
         - in: query
           name: id
           schema: { type: string }
           required: false
-          description: Counter id (default home)
-        - in: query
-          name: X-Auth-Token
-          schema: { type: string }
-          required: true
           description: Counter id (default home)
         - in: header
           name: X-Auth-Token
@@ -28,6 +24,8 @@ paths:
         - in: query
           name: token
           schema: { type: string }
+          required: false
+          description: Secret token (alternative to header)
       responses:
         '200':
           description: OK
@@ -38,10 +36,11 @@ paths:
                 properties:
                   id: { type: string }
                   hits: { type: integer }
-                  source: { type: string }
+                  source: { type: string, description: Optional source indicator (redis or memory) }
         '401': { description: Unauthorized }
     post:
       summary: Increment and return hits for an id (POST)
+      description: One of X-Auth-Token header or token query is required.
       parameters:
         - in: query
           name: id
@@ -50,23 +49,18 @@ paths:
         - in: header
           name: X-Auth-Token
           schema: { type: string }
-          required: true
-          description: Secret token for authentication
+          required: false
+          description: Secret token for authentication (required unless token query provided)
+        - in: query
+          name: token
+          schema: { type: string }
+          required: false
+          description: Secret token (alternative to header)
         - in: query
           name: url
           schema: { type: string }
           required: false
           description: Optional custom deployment URL (defaults to https://nums.advay.ca)
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                id:
-                  type: string
-                  example: home
       responses:
         '200':
           description: OK
@@ -77,24 +71,8 @@ paths:
                 properties:
                   id: { type: string }
                   hits: { type: integer }
+                  source: { type: string, description: Optional source indicator (redis or memory) }
         '401': { description: Unauthorized }
-      x-codeSamples:
-        - lang: JavaScript
-          label: Fetch Example
-          source: |
-            const url = "{{url || 'https://nums.advay.ca'}}/hit?id=home";
-            const token = "YOUR_SECRET_TOKEN";
-
-            fetch(url, {
-              method: "POST",
-              headers: {
-                "X-Auth-Token": token,
-                "Content-Type": "application/json"
-              }
-            })
-              .then(res => res.json())
-              .then(console.log)
-              .catch(console.error);
   /count:
     get:
       summary: Get current count (JSON)
@@ -102,6 +80,10 @@ paths:
         - in: query
           name: id
           schema: { type: string }
+        - in: query
+          name: format
+          schema: { type: string, enum: [txt, text] }
+          description: Return plain text when set to txt or text
       responses:
         '200':
           description: OK
@@ -138,11 +120,17 @@ paths:
         - in: query
           name: label
           schema: { type: string }
-          example: hits
+          example: views
         - in: query
           name: style
           schema: { type: string }
           example: terminal
+          description: Use terminal/mono for terminal style; omit for classic
+        - in: query
+          name: color
+          schema: { type: string }
+          example: blue
+          description: Classic badge color (ignored for terminal style)
         - in: query
           name: bg
           schema: { type: string }
@@ -168,7 +156,7 @@ paths:
         - in: query
           name: label
           schema: { type: string }
-          example: hits
+          example: views
         - in: query
           name: color
           schema: { type: string }
@@ -177,6 +165,7 @@ paths:
           name: cacheSeconds
           schema: { type: integer }
           example: 30
+          description: Clamped to 30–3600 seconds
       responses:
         '200':
           description: OK
@@ -186,7 +175,7 @@ paths:
                 type: object
                 properties:
                   schemaVersion: { type: integer, example: 1 }
-                  label: { type: string, example: hits }
+                  label: { type: string, example: views }
                   message: { type: string, example: "73" }
                   color: { type: string, example: blue }
                   cacheSeconds: { type: integer, example: 30 }

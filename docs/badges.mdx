@@ -23,7 +23,7 @@ Shields.io badges are a reliable and consistent way to display dynamic data, suc
 Direct SVG badges fetch live data directly from your nums server. This method offers more customization options and faster updates. Here's an example:
 
 ```markdown
-![hits](https://nums.advay.ca/badge?id=home&style=terminal&label=hits&bg=08c4fc&labelColor=000000&valueColor=ffffff&font=monospace)
+![hits](https://nums.advay.ca/badge?id=home&style=terminal&label=hits&bg=%2308c4fc&labelColor=%23000000&valueColor=%23ffffff&font=ui-monospace)
 ```
 
 ### Key Features
@@ -38,12 +38,62 @@ Below is a table of parameters you can use to customize your badge:
 | ------------ | ------------------ | ------------------------------------------------ |
 | `id`         | `home`             | Unique key for your counter (page/project id)    |
 | `label`      | `hits`             | Text shown on the left side of the badge         |
-| `style`      | `flat`, `terminal` | Badge design style                               |
-| `bg`         | `08c4fc`           | Background color (hex without `#`)               |
-| `labelColor` | `000000`           | Label text background color                      |
-| `valueColor` | `ffffff`           | Counter value text color                         |
-| `font`       | `monospace`        | Font family (e.g., `sans`, `serif`, `monospace`) |
-| `cache`      | `30`               | Cache time in seconds (optional override)        |
+| `style`      | `terminal`, `mono` | Badge style. Use `terminal` (monospace) or omit for classic. |
+| `bg`         | `#08c4fc`          | Background color (hex `#rgb`/`#rrggbb` or safe name) |
+| `labelColor` | `#000000`          | Label color (hex or safe name)                   |
+| `valueColor` | `#ffffff`          | Value color (hex or safe name)                   |
+| `font`       | `ui-monospace`     | Font family for rendering                        |
+
+Below are concrete examples and guidance for each parameter so you can pick values that render well across platforms.
+
+### Examples and guidance
+
+- `id` (string)
+	- Example: `id=home` or `id=downloads-page`
+	- Notes: IDs are arbitrary strings and are created on first /hit call. Use simple, URL-safe names (alphanumerics, dash, underscore).
+
+- `label` (string)
+	- Example: `label=hits`, `label=downloads`, `label=page%20views` (space must be URL-encoded as `%20`)
+	- Notes: Keep labels short (1–3 words) to avoid badge overflow.
+
+- `style` (string)
+	- Values: omit for the classic badge, or use `terminal` / `mono` for the monospace terminal look.
+	- Example (classic): `/badge?id=home&label=hits`
+	- Example (terminal): `/badge?id=home&style=terminal&label=hits`
+
+- `bg`, `labelColor`, `valueColor` (colors)
+	- Accepts hex (`#fff`, `#ffffff`) or a small allowlist of color names (e.g., `blue`, `green`, `red`).
+	- IMPORTANT: When embedding in a URL, the `#` must be URL-encoded as `%23`.
+	- Example: `bg=%2308c4fc` (renders `#08c4fc`)
+	- Example terminal badge with custom colors (URL-encoded):
+		- `https://<deployment>/badge?id=home&style=terminal&bg=%23101414&labelColor=%23aaaaaa&valueColor=%233cffb3`
+	- Fallback: invalid or unsupported colors fall back to safe defaults (server uses allowlist).
+
+- `font` (string)
+	- Example: `font=ui-monospace`, `font=Verdana,Geneva,DejaVu Sans,sans-serif`
+	- Notes: Provide a comma-separated font-family. When the chosen font isn't available on the renderer, the browser/agent will use the next available fallback.
+
+### Ready-to-copy examples
+
+- Classic badge (blue):
+```markdown
+![hits](https://<deployment>/badge?id=home&label=hits&color=blue)
+```
+
+- Terminal badge with custom colors (URL-encoded):
+```markdown
+![hits](https://<deployment>/badge?id=home&style=terminal&label=views&bg=%23101414&labelColor=%23aaaaaa&valueColor=%233cffb3&font=ui-monospace)
+```
+
+- Shields + nums (recommended for GitHub):
+```markdown
+![hits](https://img.shields.io/endpoint?url=https%3A%2F%2F<deployment>%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30)
+```
+
+### Rendering and caching notes
+
+- GitHub and other hosts may cache badge images for 1–2 minutes even for direct SVGs; use the Shields approach for consistent ~30s caching.
+- The terminal-style badge sets strong anti-cache headers to encourage revalidation, but proxies (like GitHub's image proxy) may still cache.
 
 ### How to Use
 1. Copy the Markdown snippet above.
@@ -60,7 +110,7 @@ Plaintext badges are a simple and lightweight option for displaying hit counters
 ### Example
 
 ```link
-https://<YOUR_DEPLOYMENT_URL>/count.txt
+https://<YOUR_DEPLOYMENT_URL>/count.txt?id=home
 ```
 
 ### Key Features
@@ -85,7 +135,7 @@ https://<YOUR_DEPLOYMENT_URL>/count.txt
 
 | Feature          | Shields.io Badge       | Direct SVG Badge       |
 |------------------|------------------------|------------------------|
-| **Update Speed** | ~30 seconds            | Instant (1–2 min cache)|
+| **Update Speed** | ~30 seconds            | Instant (GitHub may cache ~1–2 min) |
 | **Reliability**  | High                   | Depends on server      |
 | **Customization**| Limited                | Extensive              |
 

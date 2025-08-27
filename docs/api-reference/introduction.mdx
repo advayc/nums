@@ -3,28 +3,35 @@ title: 'API Overview'
 description: 'nums API reference and setup'
 ---
 
-Welcome to the nums API. This service lets you increment, read, and display view counters.
+Welcome to the nums API. Increment, read, and display counters as JSON, text, or badges.
 
-Base URL
-Default public instance: `https://nums.advay.ca/`.
-Or use your own Vercel deployment, e.g. `https://<project>.vercel.app`.
+## Base URL
+- Hosted instance: `https://nums.advay.ca/`
+- Self-host: `https://<project>.vercel.app`
 
-Authentication
-- Only the /hit endpoint requires a secret. Send it as the `X-Auth-Token` header or `?token=` query.
-- All read endpoints are public.
+## Authentication
+- Only `/hit` requires your secret. Send as `X-Auth-Token` header or `?token=` query.
+- Read endpoints (`/count`, `/count.txt`, `/badge`, `/badge.json`) are public.
 
-Environment variables
-- SECRET_TOKEN: required for /hit
-- UPSTASH_REDIS_URL and UPSTASH_REDIS_PASSWORD: for Redis persistence (or provide REDIS_URL)
+## Environment
+- `SECRET_TOKEN` — required for write access to `/hit`
+- `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD` — recommended for persistence (or set `REDIS_URL`)
 
-Quick example
+## Quick examples
+<CodeGroup>
+```bash Increment
+curl -H "X-Auth-Token: $SECRET_TOKEN" "https://nums.advay.ca/hit?id=home"
 ```
-curl -H "X-Auth-Token: $SECRET_TOKEN" "https://nums.advay.ca/hit?id=home"   # requires your secret if you self-host
+
+```bash Read JSON
 curl "https://nums.advay.ca/count?id=home"
 ```
 
-Note: For POST requests to `/hit`, try it with your own deployment and secret token.
+```bash Read text
+curl "https://nums.advay.ca/count.txt?id=home"
+```
+</CodeGroup>
 
-Testing guidance
-- Incrementing (`/hit`): requires your own deployment (e.g., Vercel) and your `SECRET_TOKEN`.
-- Reading (`/count`, `/count.txt`, badges): public; can use the default instance or your own.
+<Tip>
+Use your own deployment for POST /hit tests that require your secret.
+</Tip>

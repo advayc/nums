@@ -1,58 +1,92 @@
 Base URL: `https://nums.advay.ca/`
 
-Note
-- Only **/hit** requires authentication via `X-Auth-Token` header (or `?token=`) and should be tested on your own deployment with your secret.
-- All read endpoints are public and work on `https://nums.advay.ca` or your own deployment.
+<Info>
+Only <b>/hit</b> requires authentication via <code>X-Auth-Token</code> (or <code>?token=</code>). Read endpoints are public on the hosted instance and serverless deployments. When running the standalone server in <code>./cmd/server</code>, setting a <code>SECRET_TOKEN</code> also protects read endpoints.
+</Info>
 
-## Increment
-- Method: GET or POST
-- Path: `/hit`
-- Query: `id` (string)
-- Auth: required
-- Response:
-```json
-{ "id": "home", "hits": 73, "source": "redis|memory" }
-```
-- Example:
+## Increment (GET/POST /hit)
+
+<ParamField query="id" type="string">Counter id. Defaults to <code>home</code>.</ParamField>
+<ParamField header="X-Auth-Token" type="string" required>Secret token for write access. Alternatively use <code>?token=</code>.</ParamField>
+<ParamField query="token" type="string">Secret token (alternative to header).</ParamField>
+
+<RequestExample>
 ```bash
 curl -H "X-Auth-Token: $SECRET_TOKEN" "https://nums.advay.ca/hit?id=home"
 ```
-For POST, you must test with your own deployment and secret token.
+</RequestExample>
 
-## Read (JSON)
-- Method: GET
-- Path: `/count`
-- Query: `id` (string)
-- Response:
-```json
-{ "id": "home", "hits": 73, "source": "redis|memory" }
+<ResponseExample>
+```json Success
+{ "id": "home", "hits": 73, "source": "redis" }
 ```
+</ResponseExample>
 
-- Example:
+## Read (JSON) — GET /count
+
+<ParamField query="id" type="string">Counter id. Defaults to <code>home</code>.</ParamField>
+<ParamField query="format" type="string">Optional <code>txt</code> or <code>text</code> to return plain text instead of JSON.</ParamField>
+
+<RequestExample>
 ```bash
 curl "https://nums.advay.ca/count?id=home"
 ```
+</RequestExample>
 
-## Read (Text)
-- Method: GET
-- Path: `/count.txt`
-- Query: `id` (string)
-- Response: plain number
+<ResponseExample>
+```json Success
+{ "id": "home", "hits": 73, "source": "redis" }
 ```
+</ResponseExample>
+
+## Read (Text) — GET /count.txt
+
+<ParamField query="id" type="string">Counter id. Defaults to <code>home</code>.</ParamField>
+
+<RequestExample>
+```bash
+curl "https://nums.advay.ca/count.txt?id=home"
+```
+</RequestExample>
+
+<ResponseExample>
+```text Success
 73
 ```
+</ResponseExample>
 
-## Badge (SVG)
-- Method: GET
-- Path: `/badge`
-- Query: `id`, `label=views`, `style=terminal|default`, `bg`, `labelColor`, `valueColor`, `font`
-- Response: `image/svg+xml`
+## Badge (SVG) — GET /badge
 
-## Badge (Shields Endpoint)
-- Method: GET
-- Path: `/badge.json`
-- Query: `id`, `label`, `color`, `cacheSeconds`
-- Response:
-```json
+<ParamField query="id" type="string">Counter id. Defaults to <code>home</code>.</ParamField>
+<ParamField query="label" type="string">Left-side text. Defaults to <code>views</code>.</ParamField>
+<ParamField query="style" type="string">Badge style: <code>terminal</code> or default classic.</ParamField>
+<ParamField query="color" type="string">Classic badge color (e.g., <code>blue</code>).</ParamField>
+<ParamField query="bg" type="string">Terminal background (hex <code>#rrggbb</code> or allowed names).</ParamField>
+<ParamField query="labelColor" type="string">Terminal label color (hex or allowed names).</ParamField>
+<ParamField query="valueColor" type="string">Terminal value color (hex or allowed names).</ParamField>
+<ParamField query="font" type="string">Custom font family.</ParamField>
+
+<RequestExample>
+```bash
+open "https://nums.advay.ca/badge?id=home&style=terminal&label=hits&bg=%23101414&valueColor=%233cffb3"
+```
+</RequestExample>
+
+## Badge (Shields endpoint) — GET /badge.json
+
+<ParamField query="id" type="string" required>Counter id.</ParamField>
+<ParamField query="label" type="string">Left-side text. Defaults to <code>views</code>.</ParamField>
+<ParamField query="color" type="string">Badge color (e.g., <code>blue</code>).</ParamField>
+<ParamField query="cacheSeconds" type="integer" default="60">Cache TTL in seconds (30–3600 enforced).</ParamField>
+
+<RequestExample>
+```bash
+open "https://img.shields.io/endpoint?url=https%3A%2F%2Fnums.advay.ca%2Fbadge.json%3Fid%3Dhome%26label%3Dhits%26cacheSeconds%3D30"
+```
+</RequestExample>
+
+<ResponseExample>
+```json Success
 { "schemaVersion": 1, "label": "views", "message": "73", "color": "blue", "cacheSeconds": 30 }
 ```
+</ResponseExample>
