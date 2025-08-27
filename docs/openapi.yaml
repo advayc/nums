@@ -15,6 +15,11 @@ paths:
           schema: { type: string }
           required: false
           description: Counter id (default home)
+        - in: query
+          name: X-Auth-Token
+          schema: { type: string }
+          required: true
+          description: Counter id (default home)
         - in: header
           name: X-Auth-Token
           schema: { type: string }
@@ -41,9 +46,55 @@ paths:
         - in: query
           name: id
           schema: { type: string }
+          description: Counter id (default home)
+        - in: header
+          name: X-Auth-Token
+          schema: { type: string }
+          required: true
+          description: Secret token for authentication
+        - in: query
+          name: url
+          schema: { type: string }
+          required: false
+          description: Optional custom deployment URL (defaults to https://nums.advay.ca)
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: home
       responses:
-        '200': { description: OK }
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  hits: { type: integer }
         '401': { description: Unauthorized }
+      x-codeSamples:
+        - lang: JavaScript
+          label: Fetch Example
+          source: |
+            const url = "{{url || 'https://nums.advay.ca'}}/hit?id=home";
+            const token = "YOUR_SECRET_TOKEN";
+
+            fetch(url, {
+              method: "POST",
+              headers: {
+                "X-Auth-Token": token,
+                "Content-Type": "application/json"
+              }
+            })
+              .then(res => res.json())
+              .then(console.log)
+              .catch(console.error);
   /count:
     get:
       summary: Get current count (JSON)

@@ -17,6 +17,9 @@
     "description": "Track and display website visits with nums.",
     "image": "/meta.png"
   },
+  "thumbnails": {
+    "appearance": "dark"
+  },
   "navigation": {
     "tabs": [
       {
@@ -46,7 +49,6 @@
           {
             "group": "Endpoints",
             "pages": [
-              "api-reference/endpoint/hit-get",
               "api-reference/endpoint/hit-post",
               "api-reference/endpoint/count-get",
               "api-reference/endpoint/count-text-get",
