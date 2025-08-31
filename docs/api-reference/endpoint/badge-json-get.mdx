@@ -14,3 +14,13 @@ open "https://img.shields.io/endpoint?url=https%3A%2F%2F<deployment>%2Fbadge.jso
 ```
 
 Replace `<deployment>` with your actual deployment URL. This command, when run in a terminal, will open a URL that returns a JSON response compatible with Shields.io, allowing you to display dynamic badge data.
+
+---
+
+An example of this in action with my own deployment is 
+
+```bash
+https://img.shields.io/endpoint?url=https%3A%2F%2Fnums.advay.ca%2Fbadge.json%3Fid%3Dhome%26label%3Dhits
+```
+
+You can add this into your own github profile to view the views on your site, (must be in allowed origins in the .env of your vercel deployment)
