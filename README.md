@@ -1,89 +1,12 @@
 # nums
 
-<img width="1920" height="1093" alt="banner" src="https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446" />
+[<img width="1920" height="1093" alt="banner" src="https://github.com/user-attachments/assets/bd074a80-ea82-43a6-9649-bc00ab7d1446" />](https://docs.advay.ca)
 
 nums is an open source hit counter and badge service for your website. It provides fast, serverless tracking using golang. the main purpose is to use it to increment and display website visits.
 
 ---
 
-## usage
-
-### 1. Fork & Clone
-
-```bash
-git clone https://github.com/advayc/nums.git
-```
-
-### 2. Create a Redis Database
-
-upstash is recommended for pricing (not too good for scalability)
-
-1. Go to [Upstash Redis](https://console.upstash.com/redis) and create a new database.
-2. Copy the Endpoint (host:port) and password for use in your `.env` file.
-
-### 3. Configure Environment Variables
-
-Create a `.env` file with the following content
-
-```env
-PORT=8080
-SECRET_TOKEN=YOUR_RANDOM_SECRET
-PERSIST_FILE=/tmp/counter.txt
-ALLOWED_ORIGINS=https://yourwebsite.com
-REDIS_URL=
-UPSTASH_REDIS_URL=
-UPSTASH_REDIS_PASSWORD=
-REDIS_PREFIX=hits:
-FAIL_FAST_REDIS=0
-HIT_COUNTER_SECRET_TOKEN=YOUR_RANDOM_SECRET
-NEXT_PUBLIC_HIT_COUNTER_URL=https://your-deployment-url
-```
-(the private token can be anything)
-**Minimum for persistence:** `SECRET_TOKEN` plus either `REDIS_URL` or both `UPSTASH_REDIS_URL` and `UPSTASH_REDIS_PASSWORD`.
-
-### 4. Run Locally
-
-```bash
-go run ./cmd/server
-curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/hit?id=home"
-curl -H "X-Auth-Token: $SECRET_TOKEN" "http://localhost:8080/count?id=home"
-```
-
-### 5. Deploy to Vercel
-
-1. Import your fork into vercel
-2. Add the environment variables in Vercel’s dashboard (settings -> environment variables)
-3. Deploy; your base URL will be something like `https://<deployment>.vercel.app`.
-
----
-
-## Endpoints
-
-- `GET/POST /hit?id=foo`  
-  Increments the counter for `foo` and returns `{ id, hits }`.  
-  **Requires**: `X-Auth-Token` header or `?token=` param.
-
-- `GET /count?id=foo`  
-  Returns the current count as JSON: `{ id, hits }`.
-
-- `GET /count.txt?id=foo`  
-  Returns the count as plain text (good for direct badge usage).
-
-- `GET /badge?id=foo&label=views`  
-  Returns a live SVG badge (customizable via query params, does **NOT** increment).
-
-- `GET /badge.json?id=foo&label=views`  
-  Returns a Shields.io-compatible JSON schema for badges.
-
-With the deployment and secret token setup, the endpoints would be:
-
-`https://<YOUR_DEPLOYMENT_URL>/hit?id=home&token=YOUR_SECRET_TOKEN` -> increment count
-`https://<YOUR_DEPLOYMENT_URL>/count?id=home&token=YOUR_SECRET_TOKEN` -> view count (this is public and does not require the token)
-
-**Note:** Only `/hit` requires authentication. `/count`, `/count.txt`, `/badge`, and `/badge.json` are public.
-
----
-
+View the full documentation and api reference [here](https://docs.advay.ca)
 ## Badge Usage
 
 ### Markdown Shields.io Badge
