@@ -70,5 +70,5 @@ export function HitCounter({ id }: { id: string }) {
 
 ## Documentation
 
-- Hosted docs: https://nums.advay.ca
+- Hosted docs: https://docs.advay.ca
 - Guide + API reference (Mintlify) in `docs/` (open locally with `mint dev`).
